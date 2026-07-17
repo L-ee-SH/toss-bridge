@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>토스 이체 브릿지</title>
+<style>
+  body { font-family: -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+         background:#f2f4f6; margin:0; display:flex; justify-content:center; align-items:center;
+         min-height:100vh; }
+  .card { background:#fff; border-radius:20px; padding:32px 24px; width:90%; max-width:360px;
+          box-shadow:0 4px 16px rgba(0,0,0,.08); text-align:center; }
+  h1 { font-size:20px; margin:0 0 20px; color:#191f28; }
+  .row { display:flex; justify-content:space-between; padding:10px 4px; border-bottom:1px solid #f2f4f6;
+         font-size:15px; }
+  .row .k { color:#8b95a1; }
+  .row .v { color:#191f28; font-weight:600; }
+  .amount { font-size:28px; font-weight:700; color:#3182f6; margin:20px 0; }
+  a.btn { display:block; background:#3182f6; color:#fff; text-decoration:none; padding:16px;
+          border-radius:12px; font-size:17px; font-weight:700; margin-top:24px; }
+  .hint { font-size:13px; color:#8b95a1; margin-top:16px; line-height:1.5; }
+  .err { color:#e5503c; font-size:15px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>토스로 이체하기</h1>
+  <div id="content"></div>
+</div>
+<script>
+  var p = new URLSearchParams(location.search);
+  var bank = p.get("bank") || "";
+  var accountNo = (p.get("accountNo") || "").replace(/[^0-9]/g, "");
+  var amount = (p.get("amount") || "").replace(/[^0-9]/g, "");
+  var label = p.get("label") || "";
+  var el = document.getElementById("content");
+
+  if (!bank || !accountNo) {
+    el.innerHTML = '<p class="err">은행 또는 계좌번호 정보가 없습니다.<br>시트의 은행·계좌번호 칸을 확인해 주세요.</p>';
+  } else {
+    var deeplink = "supertoss://send?bank=" + encodeURIComponent(bank)
+                 + "&accountNo=" + accountNo
+                 + (amount ? "&amount=" + amount : "");
+    var html = "";
+    if (label) html += '<div class="row"><span class="k">항목</span><span class="v">' + label.replace(/</g,"&lt;") + '</span></div>';
+    html += '<div class="row"><span class="k">은행</span><span class="v">' + bank.replace(/</g,"&lt;") + '</span></div>';
+    html += '<div class="row"><span class="k">계좌</span><span class="v">' + accountNo + '</span></div>';
+    if (amount) html += '<div class="amount">' + Number(amount).toLocaleString("ko-KR") + '원</div>';
+    html += '<a class="btn" href="' + deeplink + '">토스 앱 열기</a>';
+    html += '<div class="hint">자동으로 토스가 열리지 않으면 위 버튼을 눌러주세요.<br>이체 전 받는 분 정보를 꼭 확인하세요.</div>';
+    el.innerHTML = html;
+    // 자동 시도 (사용자 제스처 없이 차단되면 버튼으로 폴백)
+    setTimeout(function () { location.href = deeplink; }, 400);
+  }
+</script>
+</body>
+</html>
